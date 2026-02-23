@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Church Setlist: Cloud Edition</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 15px; background: #121212; color: #e0e0e0; margin: 0; }
+        .container { max-width: 800px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        h2 { text-align: center; color: #bb86fc; margin-bottom: 20px; }
+        
+        .status-bar { text-align: center; font-size: 12px; color: #03dac6; height: 20px; margin-bottom: 10px; }
+        .header-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        label { font-weight: bold; font-size: 13px; color: #bb86fc; display: block; margin-bottom: 5px; }
+        input, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #2c2c2c; color: #fff; box-sizing: border-box; }
+
+        .song-section { background: #252525; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 5px solid #bb86fc; }
+        .opening { border-left-color: #03dac6; }
+        .praise { border-left-color: #6200ee; }
+        .worship { border-left-color: #cf6679; }
+
+        textarea { height: 120px; font-family: 'Courier New', monospace; font-size: 15px; margin-top: 5px; line-height: 1.4; }
+        
+        .transpose-row { display: flex; gap: 5px; margin-top: 8px; }
+        .transpose-row button { flex: 1; padding: 8px; background: #333; color: #03dac6; border: 1px solid #03dac6; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .transpose-row button:active { background: #03dac6; color: #000; }
+
+        .main-controls { display: flex; gap: 10px; margin-top: 20px; }
+        button.primary { background: #bb86fc; color: #000; flex: 2; padding: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; }
+        button.secondary { background: #333; color: #fff; flex: 1; border: 1px solid #444; border-radius: 8px; cursor: pointer; }
+
+        .history { border-top: 2px solid #333; margin-top: 30px; padding-top: 20px; }
+        .setlist-card { background: #2c2c2c; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #444; display: flex; justify-content: space-between; align-items: center; }
+        .card-info { cursor: pointer; flex-grow: 1; }
+        .card-date { color: #bb86fc; font-weight: bold; font-size: 16px; }
+        .action-btns { display: flex; gap: 8px; }
+        .btn-edit { color: #03dac6; background: none; border: 1px solid #03dac6; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        .btn-del { color: #cf6679; background: none; border: 1px solid #cf6679; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+
+        #viewMode { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #121212; overflow-y: auto; padding: 20px; box-sizing: border-box; z-index: 1000; }
+        .view-chords { white-space: pre-wrap; font-family: 'Courier New', monospace; color: #f1c40f; font-size: 16px; margin-top: 10px; }
+        .close-view { background: #cf6679; color: #fff; padding: 12px 25px; border: none; border-radius: 8px; margin-bottom: 20px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="appMain">
+    <h2>Church Setlist Pro</h2>
+    <div id="status" class="status-bar">Ready</div>
+
+    <div class="header-fields">
+        <div><label>Service Date</label><input type="date" id="serviceDate"></div>
+        <div><label>Worship Leader</label><input type="text" id="worshipLeader" placeholder="Name"></div>
+    </div>
+
+    <div class="song-section opening">
+        <h3>1. OPENING</h3>
+        <input type="text" id="opTitle" placeholder="Song Title">
+        <textarea id="opChords" placeholder="Paste Chords & Lyrics..."></textarea>
+        <div class="transpose-row">
+            <button onclick="transpose('opChords', -1)">-1 Key</button>
+            <button onclick="transpose('opChords', 1)">+1 Key</button>
+        </div>
+    </div>
+
+    <div class="song-section praise">
+        <h3>2. PRAISE</h3>
+        <input type="text" id="prTitle" placeholder="Song Title">
+        <textarea id="prChords" placeholder="Paste Chords & Lyrics..."></textarea>
+        <div class="transpose-row">
+            <button onclick="transpose('prChords', -1)">-1 Key</button>
+            <button onclick="transpose('prChords', 1)">+1 Key</button>
+        </div>
+    </div>
+
+    <div class="song-section worship">
+        <h3>3. WORSHIP</h3>
+        <input type="text" id="woTitle" placeholder="Song Title">
+        <textarea id="woChords" placeholder="Paste Chords & Lyrics..."></textarea>
+        <div class="transpose-row">
+            <button onclick="transpose('woChords', -1)">-1 Key</button>
+            <button onclick="transpose('woChords', 1)">+1 Key</button>
+        </div>
+    </div>
+
+    <div class="main-controls">
+        <button class="primary" id="saveBtn" onclick="saveToCloud()">☁️ SAVE & SHARE SETLIST</button>
+        <button class="secondary" onclick="resetForm()">Clear</button>
+    </div>
+
+    <div class="history">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3>Shared History</h3>
+            <button class="secondary" style="padding:5px 10px;" onclick="syncData()">🔄 Sync</button>
+        </div>
+        <div id="historyList"></div>
+    </div>
+</div>
+
+<div id="viewMode">
+    <button class="close-view" onclick="closeView()">← BACK TO LIST</button>
+    <div id="viewDetails"></div>
+</div>
+
+<script>
+    // CONFIG - $2a$10$TnxK2SxF7WEZbj.iIbsPJufCVOd3isWeBw.tYgk5eLHmxAqdz84ty
+    const API_KEY = '$2a$10$TnxK2SxF7WEZbj.iIbsPJufCVOd3isWeBw.tYgk5eLHmxAqdz84ty'; 
+    const BIN_ID = '699c2edf43b1c97be9963437;
+    let isEditing = null;
+
+    // --- TRANSPOSE ENGINE ---
+    const SHARPS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    function transposeChord(chord, semitones) {
+        return chord.replace(/[A-G][#b]?/g, (match) => {
+            let index = SHARPS.indexOf(match);
+            if (index === -1) { // Handle flats
+                const flats = {'Db':'C#', 'Eb':'D#', 'Gb':'F#', 'Ab':'G#', 'Bb':'A#'};
+                index = SHARPS.indexOf(flats[match] || match);
+            }
+            if (index === -1) return match;
+            let newIndex = (index + semitones) % 12;
+            if (newIndex < 0) newIndex += 12;
+            return SHARPS[newIndex];
+        });
+    }
+    function transpose(id, amt) {
+        const el = document.getElementById(id);
+        const chordRegex = /\b[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|M|[0-9]|\/)*\b/g;
+        el.value = el.value.replace(chordRegex, (m) => {
+            if(m.includes('/')) return m.split('/').map(c => transposeChord(c, amt)).join('/');
+            return transposeChord(m, amt);
+        });
+    }
+
+    // --- CLOUD LOGIC ---
+    async function saveToCloud() {
+        const status = document.getElementById('status');
+        status.innerText = "Processing...";
+        
+        const setlist = {
+            id: isEditing || Date.now(),
+            date: document.getElementById('serviceDate').value,
+            leader: document.getElementById('worshipLeader').value,
+            songs: [
+                { t: document.getElementById('opTitle').value, c: document.getElementById('opChords').value },
+                { t: document.getElementById('prTitle').value, c: document.getElementById('prChords').value },
+                { t: document.getElementById('woTitle').value, c: document.getElementById('woChords').value }
+            ]
+        };
+
+        let currentData = await fetchData();
+        if (isEditing) {
+            currentData = currentData.map(item => item.id === isEditing ? setlist : item);
+        } else {
+            currentData.unshift(setlist);
+        }
+
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+            body: JSON.stringify(currentData)
+        });
+
+        if (res.ok) {
+            alert(isEditing ? "Updated Successfully!" : "Saved & Shared!");
+            isEditing = null;
+            document.getElementById('saveBtn').innerText = "☁️ SAVE & SHARE SETLIST";
+            resetForm();
+            syncData();
+        }
+        status.innerText = "Ready";
+    }
+
+    async function fetchData() {
+        try {
+            const r = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': API_KEY } });
+            const d = await r.json();
+            return d.record || [];
+        } catch(e) { return []; }
+    }
+
+    async function syncData() {
+        document.getElementById('status').innerText = "Syncing...";
+        const data = await fetchData();
+        window.currentSets = data;
+        document.getElementById('historyList').innerHTML = data.map(s => `
+            <div class="setlist-card">
+                <div class="card-info" onclick="showSet(${s.id})">
+                    <span class="card-date">${s.date}</span><br>
+                    <small>Leader: ${s.leader}</small>
+                </div>
+                <div class="action-btns">
+                    <button class="btn-edit" onclick="editSet(${s.id})">Edit</button>
+                    <button class="btn-del" onclick="deleteSet(${s.id})">Del</button>
+                </div>
+            </div>
+        `).join('');
+        document.getElementById('status').innerText = "Synced";
+    }
+
+    function showSet(id) {
+        const s = window.currentSets.find(x => x.id === id);
+        const labels = ["OPENING", "PRAISE", "WORSHIP"];
+        const colors = ["#03dac6", "#6200ee", "#cf6679"];
+        
+        let html = `<h1>Lineup: ${s.date}</h1><h3>Leader: ${s.leader}</h3>`;
+        s.songs.forEach((song, i) => {
+            if(song.t) html += `<div style="border-left:5px solid ${colors[i]}; padding-left:15px; margin-top:25px;">
+                <h2 style="color:${colors[i]}">${labels[i]}: ${song.t}</h2>
+                <div class="view-chords">${song.c}</div>
+            </div>`;
+        });
+        document.getElementById('viewDetails').innerHTML = html;
+        document.getElementById('viewMode').style.display = 'block';
+    }
+
+    function editSet(id) {
+        const s = window.currentSets.find(x => x.id === id);
+        isEditing = id;
+        document.getElementById('serviceDate').value = s.date;
+        document.getElementById('worshipLeader').value = s.leader;
+        document.getElementById('opTitle').value = s.songs[0].t; document.getElementById('opChords').value = s.songs[0].c;
+        document.getElementById('prTitle').value = s.songs[1].t; document.getElementById('prChords').value = s.songs[1].c;
+        document.getElementById('woTitle').value = s.songs[2].t; document.getElementById('woChords').value = s.songs[2].c;
+        document.getElementById('saveBtn').innerText = "🆙 UPDATE SETLIST";
+        window.scrollTo(0,0);
+    }
+
+    async function deleteSet(id) {
+        if(!confirm("Are you sure you want to delete this lineup from the cloud?")) return;
+        const currentData = await fetchData();
+        const filtered = currentData.filter(item => item.id !== id);
+        await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+            body: JSON.stringify(filtered)
+        });
+        syncData();
+    }
+
+    function resetForm() {
+        isEditing = null;
+        document.getElementById('saveBtn').innerText = "☁️ SAVE & SHARE SETLIST";
+        ['serviceDate','worshipLeader','opTitle','opChords','prTitle','prChords','woTitle','woChords'].forEach(i=>document.getElementById(i).value="");
+        document.getElementById('serviceDate').valueAsDate = new Date();
+    }
+
+    function closeView() { document.getElementById('viewMode').style.display = 'none'; }
+    document.getElementById('serviceDate').valueAsDate = new Date();
+    syncData();
+</script>
+
+</body>
+</html>
