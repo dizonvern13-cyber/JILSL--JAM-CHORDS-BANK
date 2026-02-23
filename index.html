@@ -102,7 +102,7 @@
 </div>
 
 <script>
-    // CONFIGURATION - SIGURADUHIN NA TAMA ITO
+ // CONFIGURATION - SIGURADUHIN NA TAMA ITO
     const API_KEY = '$2a$10$TnxK2SxF7WEZbj.iIbsPJufCVOd3isWeBw.tYgk5eLHmxAqdz84ty'; 
     const BIN_ID = '699c2edf43b1c97be9963437';
     let isEditing = null;
@@ -279,6 +279,10 @@
     
     // Auto-Sync on start
     if(navigator.onLine) syncData(); else document.getElementById('status').innerText = "Offline Mode Active";
+    // Ito ay para kusa siyang mag-load pagkabukas pa lang ng page
+    window.onload = () => {
+        if(navigator.onLine) syncData();
+    };
 </script>
 
 </body>
